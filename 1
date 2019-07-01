@@ -1,0 +1,263 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Scanner;
+
+
+
+public class Admin {
+	
+
+	//static Connection con;
+	//static Statement stmt;
+	//static PreparedStatement stmt1;
+
+	
+	
+		public void addClient()
+		{	
+			
+			System.out.println("enter client details");
+			Scanner sc=new Scanner(System.in);
+			System.out.println("enter client account number");
+			long accountNumber=sc.nextLong();	
+			sc.nextLine();
+			System.out.println("enter client username");
+			String userName=sc.nextLine();
+			System.out.println("enter client password");
+			String passWord=sc.nextLine();
+			System.out.println("enter client default balance");
+			Long balance=sc.nextLong();
+			sc.nextLine();
+			
+			
+			String type="user";
+			int status=1;
+			PreparedStatement stmt1 = null;
+			Connection con=null;
+			try {
+				con=DBConnection.getConnection();
+				stmt1 = con.prepareStatement("insert into A_USERS values(?,?,?,?,?,?)");
+			 
+			
+			stmt1.setLong(1,accountNumber);
+			stmt1.setString(2,userName);
+			stmt1.setString(5,passWord);
+			stmt1.setLong(3,balance);
+			stmt1.setString(4,type);
+			stmt1.setInt(6,status);
+			int i=stmt1.executeUpdate(); 
+		              System.out.println(i+"account added succefully");
+			}  catch (SQLException e) {
+		  				// TODO Auto-generated catch block
+				 System.out.println("Caught SQLException  Account number already exists" + e.getErrorCode() + "/" + e.getSQLState() + " " + 
+                         e.getMessage() ) ;
+		  	} finally {
+			    if (stmt1 != null) {
+			        try {
+			            stmt1.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    
+			    if (con != null) {
+			        try {
+			            con.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+		}
+		public void removeClient(String accno)
+		{
+			int i=0;
+			Connection con=DBConnection.getConnection();
+			Statement stmt=null;
+			
+			try {
+				stmt=con.createStatement();
+				i = stmt.executeUpdate("update A_USERS set status=2 where ACCOUNTID="+accno+"and usertype='user' and status=1");
+			if(i==1){		
+			System.out.println(i+" account removed");
+			}
+			else{
+				System.out.println("no account exists");
+			} }catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+			    
+			    if (stmt != null) {
+			        try {
+			            stmt.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    if (con != null) {
+			        try {
+			            con.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+		}
+		public void displayUsers()
+		{
+			ResultSet rs;
+			Connection con=DBConnection.getConnection();
+			Statement stmt=null;
+			try {stmt=con.createStatement();
+				rs = stmt.executeQuery("select Accountid,cusername,balance from A_USERS where usertype='user'and status=1");
+			
+				System.out.println("AccNo " + " username " + " balance ");
+			while(rs.next())  {
+			System.out.println(rs.getInt(1)+"    "+rs.getString(2)+"         "+rs.getLong(3));  
+			}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+			   
+			    if (stmt != null) {
+			        try {
+			            stmt.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    if (con != null) {
+			        try {
+			            con.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+		  	}
+		
+		public void login(int  id,String pword)
+		{
+			ResultSet rs = null;
+			Connection con=DBConnection.getConnection();
+			Statement stmt=null;
+			try {
+
+				stmt=con.createStatement();
+				rs = stmt.executeQuery("select cpassword,usertype from A_USERS where accountid="+id+"and status=1 ");
+			
+
+
+
+
+			while(rs.next()){
+
+				String i=rs.getString(1);
+			    String s=rs.getString(2);
+			    
+				    if((i.equals(pword))&&(s.equals("admin")))
+					{
+					
+					System.out.println("you are Successfullly logged in as Adminstrator");
+					options();
+					break;
+					}			
+				    else
+				    {
+					   System.out.println("please check your credentials");
+				    }
+				  
+			}} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}finally {
+			    if (rs != null) {
+			        try {
+			            rs.close();
+			        } catch (SQLException e) { /* ignored */} 
+			    }
+			    if (stmt != null) {
+			        try {
+			            stmt.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    if (con != null) {
+			        try {
+			            con.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+		}
+			
+		
+			
+			
+		public void options() {
+			// TODO Auto-generated method stub
+			boolean ch=false;
+			do{
+			System.out.println("select your option");
+			System.out.println("1.Display Users");
+			System.out.println("2.Add user");
+			System.out.println("3.remove user");
+			System.out.println("4.logout");
+			Scanner sc=new Scanner(System.in);
+			int choice=sc.nextInt();
+			
+			//sc.close();
+			switch(choice){
+			case 1: displayUsers();
+			       System.out.println();
+			        break;
+			case 2: 
+			        addClient();
+					break;
+			case 3: 
+			         System.out.println("enter account number to remove");
+			         String num=sc.next();
+			         removeClient(num);
+					  break;
+			case 4 : System.out.println("are you sure u want to logout continue 1->yes  ");
+			         int yes=sc.nextInt();
+			         if(yes==1)
+			        	 ch=true;
+			         System.out.println("successfully logged out");
+			         break;
+			default:System.out.println("you selected wrong option");		
+			}
+			
+			}while(ch == false);
+		}
+		
+		
+		public static void main(String args[])
+		{
+			
+			Admin  a1=new Admin();
+			Scanner sc=new Scanner(System.in);
+			int option;
+			boolean ch=true;
+
+				do{
+				System.out.println("do u want to login as Adimn or client");
+				System.out.println("1.Admin");
+				System.out.println("2.client");
+				System.out.println("enter your option");
+			option=sc.nextInt(); 
+			
+			switch(option){
+			case 1:System.out.println("enter admin id and  admin Password");
+				   int uName=sc.nextInt();
+				   String pword=sc.next();
+				   a1.login(uName,pword ); 
+				   break;
+			case 2:System.out.println("enter client Account Number and Password");
+			       int accNum=sc.nextInt();
+			       sc.nextLine();
+			       String cpword=sc.next();
+			       Client c1=new Client();
+			      c1.login(accNum,cpword); 
+			       break;
+			
+			default :System.out.println("wrong input ");
+			}
+			
+			}while(ch);
+				
+			
+		}
+
+}
