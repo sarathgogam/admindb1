@@ -1,0 +1,572 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.InputMismatchException;
+import java.util.Scanner;
+public class Client {
+	
+ 
+	 static Admin a=new Admin();
+	 
+	
+	
+	public  void  login(int accNum,String cpword)
+	{
+		
+		//for (Entry<String, Client> entry :clientList.entrySet())  
+		//{
+		
+		ResultSet rs = null;
+		Connection con=DBConnection.getConnection();
+		Statement stmt=null;
+		try {
+			stmt=con.createStatement();
+			rs = stmt.executeQuery("select * from A_USERS where accountid="+accNum+" and cpassword='"+cpword+"' and status =1");
+	
+		
+		if(rs.next()){
+
+				System.out.println("login succesful");
+				options(accNum);
+				
+			}
+			
+		else
+		{
+			System.out.println("wrong credentials");
+		
+		}
+	
+		
+	
+	
+	} catch (SQLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}finally {
+	    if (rs != null) {
+	        try {
+	            rs.close();
+	        } catch (SQLException e) { /* ignored */}
+	    }
+	    if (stmt != null) {
+	        try {
+	            stmt.close();
+	        } catch (SQLException e) { /* ignored */}
+	    }
+	    if (con != null) {
+	        try {
+	            con.close();
+	        } catch (SQLException e) { /* ignored */}
+	    }
+	}
+	
+		}
+			
+	
+public  void options(int accNum) {
+
+	boolean op=false;
+	do{
+	System.out.println("please select your option");
+	System.out.println("1.Deposit");
+	System.out.println("2.Withdraw");
+	System.out.println("3.fund Transfer");
+	System.out.println("4.Check Balance");
+	System.out.println("5.Change Password");
+	System.out.println("6.Transaction details");
+	System.out.println("7.logout");
+	System.out.println("enter option");
+	Scanner sc= new Scanner(System.in);
+	int ch=sc.nextInt();
+	
+		// TODO Auto-generated method stub
+	switch(ch){
+	case 1 : System.out.println("enter amount u  want to deposit");
+	        int am;
+	          try{
+	            am=sc.nextInt();
+	            deposit(am,accNum);
+	         }catch(NumberFormatException e){
+	        	 System.out.println("wrong format");
+	         }
+	          catch(java.util.InputMismatchException e){
+	        	  System.out.println("wrong format");
+	          }
+	           
+	          break;
+	case 2 : System.out.println("enter amount u  want to withdraw");
+	         int wam;
+	          try{
+              wam=sc.nextInt();
+              withDraw(wam,accNum); 
+	         }catch(NumberFormatException  e){
+	        	 System.out.println("wrong format");
+	         }
+	          catch (InputMismatchException e1){
+	        	  System.out.println("wrong format");
+	          }
+               
+             break;
+	case 3 :  System.out.println("enter account number and amount");
+	          int acno=sc.nextInt();
+	          int ftam;
+	          try{
+	           ftam=sc.nextInt();
+	           if(acno==accNum){
+	        	   System.out.println("no need to tranfer money is already in your account");
+	           }
+	           else{
+	           fundTransfer(acno,ftam,accNum);
+	           }
+	          }catch(NumberFormatException e){
+	        	  System.out.println("wrong format");
+	          }
+	          catch (InputMismatchException e1){
+	        	  System.out.println("wrong format");
+	          }
+	         
+	          break;
+	case 4 : checkBalance(accNum);
+			 break;
+	case 5 : changePassword(accNum);
+				break;
+				
+	case 6 :transactionDetails(accNum);
+            break;
+	
+	
+	case  7: System.out.println("Are u sure u want to logout 1->confirm");
+	         int yes=sc.nextInt();
+               if(yes==1)
+   	              op=true;
+	         System.out.println("successfully logged out");
+	         break;
+	 default:System.out.println("enter correct option");
+	}
+	
+
+     
+ }while(op==false);
+}	
+	
+private void transactionDetails(int accno) {
+	// TODO Auto-generated method stub
+	ResultSet rst = null;
+	Connection con=DBConnection.getConnection();
+	Statement stmt=null;
+	try {
+		stmt=con.createStatement();
+		rst = stmt.executeQuery("select * from transactions where ACCOUNTID="+accno);
+
+		System.out.println("transaction id  " + "transaction amount " +  "       comment   " + " credit/debit ");
+	while(rst.next()){
+		
+		System.out.printf("%10d %22d %18s %15s",rst.getInt(2),rst.getInt(3),rst.getString(4),rst.getString(5));
+		System.out.println();
+	
+		
+	} } catch (SQLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}finally {
+	    if (rst != null) {
+	        try {
+	            rst.close();
+	        } catch (SQLException e) { /* ignored */}
+	    }
+	    if (stmt != null) {
+	        try {
+	            stmt.close();
+	        } catch (SQLException e) { /* ignored */}
+	    }
+	    if (con != null) {
+	        try {
+	            con.close();
+	        } catch (SQLException e) { /* ignored */}
+	    }
+	}
+
+	
+	
+	}
+	
+	
+
+private void transactionUpdate(int accno,int am,String c,String t){
+	PreparedStatement stmt1 = null;
+	ResultSet stmt2=null;
+	int tid=0;
+	
+	//stmt.execute("UPDATE A_CLIENT  SET balance="+dbalanceS+"  WHERE accountid = "+accNum+"");
+
+	Connection con=DBConnection.getConnection();
+	Statement stmt=null;
+	
+			try {
+				stmt=con.createStatement();
+				stmt1 = con.prepareStatement("insert into transactions values(?,?,?,?,?)");
+			
+			stmt2 =	stmt.executeQuery(" SELECT COUNT(*) FROM Transactions" );
+		        
+			while(stmt2.next()){
+				 tid=stmt2.getInt(1);
+			}
+			 	 tid += 1;
+		stmt1.setLong(1,accno);		
+		stmt1.setInt(2,tid);
+		stmt1.setLong(3,am);
+		stmt1.setString(4,c);
+		stmt1.setString(5, t);
+		stmt1.executeUpdate(); 
+			  } catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}finally {
+				    if (stmt1 != null) {
+				        try {
+				            stmt1.close();
+				        } catch (SQLException e) { /* ignored */}
+				    }
+				    if (stmt != null) {
+				        try {
+				            stmt.close();
+				        } catch (SQLException e) { /* ignored */}
+				    }
+				    if (stmt2 != null) {
+				        try {
+				            stmt2.close();
+				        } catch (SQLException e) { /* ignored */}
+				    }
+				    if (con != null) {
+				        try {
+				            con.close();
+				        } catch (SQLException e) { /* ignored */}
+				    }
+				}
+}
+
+
+private void changePassword(int accNo) {
+	// TODO Auto-generated method stub
+	ResultSet rs = null;
+	String c;
+	Connection con=DBConnection.getConnection();
+	Statement stmt=null;
+	try {
+		stmt=con.createStatement();
+		rs = stmt.executeQuery("select cpassword from A_USERS where ACCOUNTID="+accNo+"and status=1");
+		Scanner sc=new Scanner(System.in);
+	System.out.println("enter old paswword ");
+	String s=sc.next();
+	while(rs.next()){
+
+		c=rs.getString(1);
+	
+		if(c.equals(s))
+		{
+			System.out.println("Enter new password");
+			int p=sc.nextInt();
+			stmt.execute("UPDATE A_USERS  SET cpassword="+p+"  WHERE accountid = "+accNo+"");
+			System.out.println(" password change successful");
+			
+		}
+		else
+		{
+			System.out.println("wrong password didn't match");
+		
+		}
+	}
+} catch (SQLException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+}finally {
+    if (rs != null) {
+        try {
+            rs.close();
+        } catch (SQLException e) { /* ignored */}
+    }
+    if (stmt != null) {
+        try {
+            stmt.close();
+        } catch (SQLException e) { /* ignored */}
+    }
+    if (con != null) {
+        try {
+            con.close();
+        } catch (SQLException e) { /* ignored */}
+    }}
+	
+}
+
+private void fundTransfer(int acno,int ftam,int accNum){
+	 ResultSet rsfs = null,rsfr = null,rsfs2 = null,rsfr2 = null;
+	 String na="",na1="";
+	 int i=0;
+	 Connection con=DBConnection.getConnection();
+		Statement stmt=null;
+		try {
+			stmt=con.createStatement();
+			rsfs = stmt.executeQuery("select balance from A_USERS where ACCOUNTID="+accNum+"and status=1 and usertype='user'");
+		
+	    int dbalanceS=0;
+		while(rsfs.next()){
+           dbalanceS=rsfs.getInt(1);
+			}
+ 	rsfr = stmt.executeQuery("select balance from A_USERS where ACCOUNTID="+acno+"and status=1 and usertype='user'");
+	if(rsfr.next()){	 
+ 	int dbalanceR=0;
+		while(rsfr.next()){
+			 dbalanceR=rsfr.getInt(1);
+			}
+	      boolean test = checkAmount(ftam);
+			if(test)
+			{
+				System.out.println("cannot add balance");
+			}
+			
+			else if(dbalanceS<ftam){
+	    	     System.out.println("your balance is not sufficient");
+	             }  
+	            else{ 
+	    	                
+	    	           dbalanceS -= ftam;
+	    	           stmt.executeUpdate("UPDATE A_USERS  SET balance="+dbalanceS+"  WHERE accountid = "+accNum+"and status=1");
+	    	            dbalanceR += ftam;
+	    	        i =   stmt.executeUpdate("UPDATE A_USERS  SET balance="+dbalanceR+"  WHERE accountid = "+acno+"and status=1");
+	    	        if(i==1)
+	    	            System.out.println("succesfully transferred");
+	    	            rsfr2=stmt.executeQuery("select cusername from A_USERS where ACCOUNTID="+acno);
+	    				while(rsfr2.next()){
+
+	    					  na=rsfr2.getString(1);
+	    				}
+	    				String t="transffered to->".concat(na);
+	    				transactionUpdate(accNum, ftam,t,"debit");
+	    				
+	    				 rsfs2=stmt.executeQuery("select cusername from A_USERS where ACCOUNTID="+accNum);
+		    				while(rsfs2.next()){
+
+		    					  na1=rsfs2.getString(1);
+		    				}
+		    				String t1="received from->".concat(na1);
+		    				transactionUpdate(acno, ftam,t1,"credit");
+	    				
+	            }
+	}
+	else{
+		System.out.println("invalid account number");
+	}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally {
+		    if (rsfs != null) {
+		        try {
+		            rsfs.close();
+		        } catch (SQLException e) { /* ignored */}
+		    }
+		    if (rsfr != null) {
+		        try {
+		            rsfr.close();
+		        } catch (SQLException e) { /* ignored */}
+		    }
+		    if (rsfs2 != null) {
+		        try {
+		            rsfs2.close();
+		        } catch (SQLException e) { /* ignored */}
+		    }
+		    if (rsfr2 != null) {
+		        try {
+		            rsfr2.close();
+		        } catch (SQLException e) { /* ignored */}
+		    }
+		    if (stmt != null) {
+		        try {
+		            stmt.close();
+		        } catch (SQLException e) { /* ignored */}
+		    }
+		    if (con != null) {
+		        try {
+		            con.close();
+		        } catch (SQLException e) { /* ignored */}
+		    }}
+	             }
+	      
+
+
+//	 
+	
+	private void checkBalance(int accNum) {
+		// TODO Auto-generated method stub	System.out.println("your account balance is");
+      ResultSet rsc = null;
+      Connection con=DBConnection.getConnection();
+		Statement stmt=null;
+         try {
+        	 stmt=con.createStatement();
+	      rsc =stmt.executeQuery("select balance from A_USERS where ACCOUNTID="+accNum+"");
+	      while(rsc.next()){
+	    	  System.out.println("your balance  is");
+           System.out.println(rsc.getInt(1));
+		   }
+} catch (SQLException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+}	finally {
+    if (rsc != null) {
+        try {
+            rsc.close();
+        } catch (SQLException e) { /* ignored */}
+    }
+    if (stmt != null) {
+        try {
+            stmt.close();
+        } catch (SQLException e) { /* ignored */}
+    }
+    if (con != null) {
+        try {
+            con.close();
+        } catch (SQLException e) { /* ignored */}
+    }
+}
+	}
+
+
+
+
+	public Client()
+	{
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	public  void deposit(int amount,int accNum)
+	{
+     ResultSet rsd = null;
+     Connection con=DBConnection.getConnection();
+		Statement stmt=null;
+	try {
+		stmt=con.createStatement();
+		rsd =stmt.executeQuery("select balance from A_USERS where ACCOUNTID="+accNum+"");
+	
+          int dbalance=0;
+		
+			while(rsd.next()){
+
+				 dbalance=rsd.getInt(1);
+			}
+		
+		boolean test = checkAmount(amount);
+		if(test)
+		{
+			System.out.println("cannot add balance");
+		}
+		else
+		{
+		dbalance=dbalance+amount;
+		  
+		
+			stmt.execute("UPDATE A_USERS  SET balance="+dbalance+"  WHERE accountid = "+accNum+"");
+		System.out.println("successfully deposited");
+		String d="myself ";
+		transactionUpdate( accNum,amount,d,"credit");
+		} }catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally {
+		    if (rsd != null) {
+		        try {
+		            rsd.close();
+		        } catch (SQLException e) { /* ignored */}
+		    }
+		    if (stmt != null) {
+		        try {
+		            stmt.close();
+		        } catch (SQLException e) { /* ignored */}
+		    }
+		    if (con != null) {
+		        try {
+		            con.close();
+		        } catch (SQLException e) { /* ignored */}
+		    }
+		}}
+	
+	
+	public  void withDraw(int amount,int accNum)
+	{
+		ResultSet rsw = null;
+		Connection con=DBConnection.getConnection();
+		Statement stmt=null;
+		try {
+			stmt=con.createStatement();
+			rsw =stmt.executeQuery("select balance from A_USERS where ACCOUNTID="+accNum+"");
+		
+	          int dbalance=0;
+			
+				while(rsw.next()){
+
+					 dbalance=rsw.getInt(1);
+				}
+			
+			boolean test = checkAmount(amount);
+			if(test)
+			{
+				System.out.println("cannot add balance");
+			}
+			else if(dbalance<amount)
+				{
+					System.out.println("insufficient funds");
+				}	
+			else
+			{
+			dbalance=dbalance-amount;
+			  
+			
+				stmt.execute("UPDATE A_USERS  SET balance="+dbalance+"  WHERE accountid = "+accNum+"");
+			System.out.println("successfully withdrawn");
+			String t="myself";
+			transactionUpdate(accNum,amount,t,"debit");
+			} }catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}finally {
+			    if (rsw != null) {
+			        try {
+			            rsw.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    if (stmt != null) {
+			        try {
+			            stmt.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    if (con != null) {
+			        try {
+			            con.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+		  	}
+			}
+		
+		
+	
+	
+	public boolean checkAmount(int amt)
+	{
+		boolean test=false;
+		if(amt<0){
+			test= true;
+			System.out.println("please enter only amount with out - sign");
+		}
+			return test;
+	}
+
+}
